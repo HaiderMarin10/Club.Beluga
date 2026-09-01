@@ -463,6 +463,42 @@
     .bottomnav .bn.active { color:#0a7a7a; }
     .bottomnav .bn:active { transform:scale(.92); }
   }
+  /* ── Chef conserje (bot IA, BYOK) ── */
+  .chef-fab{position:fixed;right:20px;bottom:24px;z-index:70;width:58px;height:58px;border-radius:50%;
+    border:none;cursor:pointer;background:linear-gradient(145deg,#12403a,#0a2c28);color:#e8c874;
+    font-size:26px;box-shadow:0 6px 20px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;
+    transition:transform .15s;-webkit-tap-highlight-color:transparent;}
+  .chef-fab:active{transform:scale(.9);}
+  .chef-panel{position:fixed;z-index:75;right:20px;bottom:92px;width:380px;max-width:calc(100vw - 32px);
+    height:560px;max-height:calc(100vh - 130px);background:#fff;border-radius:18px;
+    box-shadow:0 12px 44px rgba(0,0,0,.3);display:none;flex-direction:column;overflow:hidden;border:1px solid #eadfbf;}
+  .chef-panel.open{display:flex;animation:sheetUp .22s ease;}
+  .chef-head{background:linear-gradient(145deg,#12403a,#0a2c28);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;}
+  .chef-head .ch-ic{font-size:22px;}
+  .chef-head .ch-t{font-weight:700;font-size:15px;line-height:1.1;}
+  .chef-head .ch-s{font-size:11px;opacity:.75;}
+  .chef-head .ch-x{margin-left:auto;background:none;border:none;color:#fff;font-size:20px;cursor:pointer;opacity:.8;}
+  .chef-model{font-size:11px;color:#888;padding:8px 14px;background:#fff;display:none;align-items:center;gap:6px;border-bottom:1px solid #f0f0f0;}
+  .chef-model select{font:inherit;font-size:11px;border:1px solid #e2e2e2;border-radius:6px;padding:2px 4px;}
+  .chef-body{flex:1;overflow-y:auto;padding:14px;background:#faf7ef;display:flex;flex-direction:column;gap:10px;}
+  .chef-msg{max-width:85%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.42;white-space:pre-wrap;}
+  .chef-msg.bot{background:#fff;border:1px solid #ece3c9;align-self:flex-start;border-bottom-left-radius:4px;color:#333;}
+  .chef-msg.me{background:#12403a;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+  .chef-msg .rec{color:#12403a;font-weight:600;cursor:pointer;text-decoration:underline;}
+  .chef-typing{align-self:flex-start;color:#999;font-size:13px;padding:4px 8px;}
+  .chef-foot{border-top:1px solid #eee;padding:10px;display:none;gap:8px;background:#fff;}
+  .chef-foot input{flex:1;border:1px solid #ddd;border-radius:22px;padding:10px 14px;font:inherit;font-size:14px;outline:none;}
+  .chef-foot button{border:none;background:#12403a;color:#e8c874;width:42px;border-radius:50%;cursor:pointer;font-size:17px;flex:none;}
+  .chef-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .chef-chip{background:#fff;border:1px solid #ddd6c0;border-radius:14px;padding:6px 11px;font-size:12.5px;cursor:pointer;color:#555;}
+  .chef-setup{padding:16px;font-size:13px;line-height:1.5;color:#444;}
+  .chef-setup input{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:9px;margin:8px 0;font:inherit;}
+  .chef-setup a{color:#0a7a7a;}
+  .chef-setup .savek{background:#12403a;color:#e8c874;border:none;border-radius:8px;padding:9px 14px;cursor:pointer;font-weight:600;width:100%;}
+  @media (max-width:760px){
+    .chef-fab{bottom:calc(74px + env(safe-area-inset-bottom,0px));right:14px;}
+    .chef-panel{right:8px;left:8px;width:auto;max-width:none;top:64px;bottom:calc(70px + env(safe-area-inset-bottom,0px));height:auto;max-height:none;}
+  }
 </style>
 <style id="hide-resv">#vbtn-agenda,.bn-reservas{display:none !important}</style></head>
 <body>
@@ -567,6 +603,28 @@
   <button id="bn-filtros" class="bn" onclick="toggleAdvFilters()"><span class="bn-ic">⚙️</span>Filtros</button>
 </nav>
 
+<button class="chef-fab" id="chef-fab" onclick="toggleChef()" title="Chef conserje" aria-label="Chef conserje">🧑‍🍳</button>
+<div class="chef-panel" id="chef-panel">
+  <div class="chef-head">
+    <span class="ch-ic">🧑‍🍳</span>
+    <div><div class="ch-t">Chef Beluga</div><div class="ch-s">Tu conserje gastronómico</div></div>
+    <button class="ch-x" onclick="toggleChef()">✕</button>
+  </div>
+  <div class="chef-model" id="chef-model">
+    Modelo:
+    <select id="chef-model-sel" onchange="chefSetModel(this.value)">
+      <option value="claude-sonnet-5">Sonnet · recomendado</option>
+      <option value="claude-haiku-4-5-20251001">Haiku · más barato</option>
+    </select>
+    <a href="#" onclick="chefForget();return false" style="margin-left:auto;color:#c05">Olvidar clave</a>
+  </div>
+  <div class="chef-body" id="chef-body"></div>
+  <div class="chef-foot" id="chef-foot">
+    <input id="chef-input" placeholder="Ej: estoy en Chamberí, un italiano rico" onkeydown="if(event.key==='Enter')chefSend()">
+    <button onclick="chefSend()">➤</button>
+  </div>
+</div>
+
 <div class="overlay" id="overlay">
   <div class="modal" id="modal">
     <button class="modal-close" id="modal-close">✕</button>
@@ -576,7 +634,7 @@
 
 <script>
 let DATA = [];
-let RESERVAS = []; let RESV_ENC = "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";
+let RESERVAS = []; let RESV_ENC = "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";
 // Placeholder de portada cuando no hay foto: emoji de cocina + degradado estable por nombre.
 function coverEmoji(r){
   const s = ((r.subcategoria||'')+' '+(r.cocina_std||'')+' '+(r.categoria_std||'')+' '+(r.especialidad||'')).toLowerCase();
@@ -1486,6 +1544,129 @@ function openModal(idx) {
 
 function closeModal() { document.getElementById('overlay').classList.remove('open'); }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+
+<script>
+/* ── Chef conserje · bot IA (BYOK: cada quien usa su propia clave de Anthropic) ── */
+const CHEF_KEY_LS='beluga_ai_key', CHEF_MODEL_LS='beluga_ai_model';
+let chefHistory=[], chefBusy=false;
+function chefKey(){ try{return localStorage.getItem(CHEF_KEY_LS)||''}catch(e){return ''} }
+function chefModel(){ try{return localStorage.getItem(CHEF_MODEL_LS)||'claude-sonnet-5'}catch(e){return 'claude-sonnet-5'} }
+function chefSetModel(m){ try{localStorage.setItem(CHEF_MODEL_LS,m)}catch(e){} }
+function chefForget(){ try{localStorage.removeItem(CHEF_KEY_LS)}catch(e){}; chefHistory=[]; chefRender(); }
+function toggleChef(){
+  const p=document.getElementById('chef-panel'); if(!p) return;
+  const opening=!p.classList.contains('open');
+  p.classList.toggle('open', opening);
+  if(opening){ chefRender(); const i=document.getElementById('chef-input'); if(i && chefKey()) setTimeout(()=>i.focus(),150); }
+}
+function chefRender(){
+  const body=document.getElementById('chef-body'), foot=document.getElementById('chef-foot'), modelBar=document.getElementById('chef-model');
+  if(!body) return;
+  if(!chefKey()){
+    foot.style.display='none'; modelBar.style.display='none';
+    body.innerHTML='<div class="chef-setup"><b>👋 Soy tu chef-conserje.</b><br>Te recomiendo entre <b>tus</b> restaurantes según dónde estés y qué te apetezca.<br><br>'
+      +'Para activarme necesito tu clave de API de Anthropic (se guarda <b>solo en este dispositivo</b>, nadie más la ve):'
+      +'<input id="chef-key-in" type="password" placeholder="sk-ant-..." autocomplete="off">'
+      +'<button class="savek" onclick="chefSaveKey()">Guardar y empezar</button>'
+      +'<div style="margin-top:8px;font-size:11.5px;color:#888">La consigues en <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. El coste lo pagas tú directamente a Anthropic (céntimos por consulta).</div></div>';
+    return;
+  }
+  foot.style.display='flex'; modelBar.style.display='flex';
+  const sel=document.getElementById('chef-model-sel'); if(sel) sel.value=chefModel();
+  if(!chefHistory.length){
+    body.innerHTML='<div class="chef-msg bot">¡Hola! ¿Qué te apetece hoy? Dime la zona y el tipo de plan. 🍽️</div>'
+      +'<div class="chef-chips">'
+      +'<span class="chef-chip" onclick="chefQuick(\'Estoy en Chamberí, un italiano para cenar\')">🍝 Italiano en Chamberí</span>'
+      +'<span class="chef-chip" onclick="chefQuick(\'Algo especial para una ocasión, con estrella Michelin\')">⭐ Ocasión especial</span>'
+      +'<span class="chef-chip" onclick="chefQuick(\'Un japonés bueno y no muy caro\')">🍣 Japonés asequible</span>'
+      +'<span class="chef-chip" onclick="chefQuick(\'Sorpréndeme con uno de mis favoritos\')">🎲 Sorpréndeme</span>'
+      +'</div>';
+    return;
+  }
+  body.innerHTML = chefHistory.map(m=>'<div class="chef-msg '+(m.role==='user'?'me':'bot')+'">'+(m.role==='user'?esc(m.text):chefLinkify(m.text))+'</div>').join('')
+    + (chefBusy?'<div class="chef-typing">El chef está pensando…</div>':'');
+  body.scrollTop=body.scrollHeight;
+}
+function chefSaveKey(){
+  const el=document.getElementById('chef-key-in'); const v=el?el.value.trim():'';
+  if(!v) return;
+  try{localStorage.setItem(CHEF_KEY_LS,v)}catch(e){}
+  chefRender(); const i=document.getElementById('chef-input'); if(i) setTimeout(()=>i.focus(),150);
+}
+function chefQuick(t){ const i=document.getElementById('chef-input'); if(i){ i.value=t; chefSend(); } }
+function chefLinkify(t){
+  return esc(t).replace(/\[\[(.+?)\]\]/g, function(m,name){
+    return '<span class="rec" onclick="chefOpen(\''+name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'+name+'</span>';
+  });
+}
+function chefOpen(name){
+  const low=name.toLowerCase();
+  const r=DATA.find(x=>x.nombre===name) || DATA.find(x=>(x.nombre||'').toLowerCase()===low) || DATA.find(x=>(x.nombre||'').toLowerCase().includes(low));
+  if(r){ if(typeof setView==='function') setView('grid'); if(typeof openModalPorNombre==='function') openModalPorNombre(r.nombre); }
+}
+function chefCandidates(q){
+  const stop=new Set(['de','la','el','un','una','en','para','con','que','me','mi','estoy','algo','muy','del','los','las','por','sitio','sitios','restaurante','restaurantes','cena','cenar','comer','comida','apetece','quiero','busco','este','esta','ahora','cerca','plan','ganas','apetecen','recomienda','recomiendame','recomiéndame']);
+  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const ql=q.toLowerCase();
+  const toks=norm(q).replace(/[^a-z0-9ñ ]/g,' ').split(/\s+/).filter(w=>w.length>2&&!stop.has(w));
+  const scored=DATA.map(r=>{
+    const city=norm((r.ciudad||'')+' '+(r.barrio||'')+' '+(r.comunidad_autonoma||''));
+    const kind=norm((r.cocina_std||'')+' '+(r.categoria_std||'')+' '+(r.subcategoria||'')+' '+(r.subtipo||''));
+    const name=norm(r.nombre), note=norm(r.nota_publica);
+    let s=0;
+    for(const t of toks){ if(city.includes(t))s+=5; if(kind.includes(t))s+=4; if(name.includes(t))s+=3; if(note.includes(t))s+=2; }
+    if(/michelin|estrella/.test(ql) && r.michelin_distincion) s+=6;
+    if(/repsol|sol/.test(ql) && r.repsol_soles) s+=4;
+    if(/favorit/.test(ql) && typeof favoritos!=='undefined' && favoritos.has(r.nombre)) s+=8;
+    return {r,s};
+  });
+  scored.sort((a,b)=> b.s-a.s || ((b.r.rating_google||0)-(a.r.rating_google||0)));
+  let top=scored.filter(x=>x.s>0).slice(0,24).map(x=>x.r);
+  if(top.length<6){
+    const extra=scored.filter(x=>x.s===0).sort((a,b)=>(b.r.rating_google||0)-(a.r.rating_google||0)).slice(0,12).map(x=>x.r);
+    top=top.concat(extra).slice(0,24);
+  }
+  return top;
+}
+async function chefSend(){
+  const inp=document.getElementById('chef-input'); if(!inp) return;
+  const q=inp.value.trim(); if(!q||chefBusy) return;
+  inp.value='';
+  chefHistory.push({role:'user',text:q});
+  chefBusy=true; chefRender();
+  try{
+    const cands=chefCandidates(q).map(r=>({
+      n:r.nombre, c:r.ciudad||'', b:r.barrio||'', k:r.cocina_std||r.categoria_std||'',
+      p:r.precio_std||r.precio||'', rt:r.rating_google||r.rating||'',
+      g:r.michelin_distincion||(r.repsol_soles?('Repsol '+r.repsol_soles+' soles'):'')||'',
+      nota:(r.nota_publica||'').slice(0,160)
+    }));
+    const system="Eres el chef-conserje de Club Beluga, la guía gastronómica PERSONAL del usuario. Recomiendas ÚNICAMENTE entre los restaurantes de la lista JSON que te paso (son los que el usuario ha guardado); NUNCA inventes sitios que no estén en la lista. Sé cálido, breve y concreto (máx 4-5 frases). Prioriza la zona/barrio y el tipo de cocina que pida. Aprovecha el campo 'nota' (por qué el usuario lo guardó) para justificar. Cuando recomiendes un restaurante escribe su nombre EXACTO (campo 'n') entre dobles corchetes: [[Nombre exacto]]. Recomienda 1-3 sitios. Si ninguno encaja del todo, dilo con honestidad y ofrece la mejor alternativa disponible. Responde en el idioma del usuario (por defecto español).";
+    const hist=chefHistory.filter(m=>m.role==='user'||m.role==='assistant').slice(-6)
+      .map(m=>({role:m.role==='user'?'user':'assistant',content:m.text}));
+    hist[hist.length-1]={role:'user',content:q+"\n\n[Restaurantes disponibles del usuario, JSON]:\n"+JSON.stringify(cands)};
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'content-type':'application/json','x-api-key':chefKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:chefModel(),max_tokens:700,system:system,messages:hist})
+    });
+    if(!resp.ok){
+      const err=await resp.text(); let msg='No pude conectar con el chef ('+resp.status+').';
+      if(resp.status===401) msg='La clave de API no es válida. Pulsa "Olvidar clave" e introdúcela de nuevo.';
+      else if(resp.status===429) msg='Límite de tu cuenta de Anthropic alcanzado. Inténtalo en un momento.';
+      else if(resp.status>=400 && /credit|balance|insufficient/i.test(err)) msg='Tu cuenta de Anthropic no tiene saldo. Añade crédito en console.anthropic.com.';
+      chefHistory.push({role:'assistant',text:msg});
+    } else {
+      const data=await resp.json();
+      const txt=(data.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('\n').trim()||'…';
+      chefHistory.push({role:'assistant',text:txt});
+    }
+  }catch(e){
+    chefHistory.push({role:'assistant',text:'Error de red al hablar con el chef. ¿Tienes conexión a internet?'});
+  }
+  chefBusy=false; chefRender();
+}
 </script>
 
 <script>
