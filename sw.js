@@ -1,5 +1,5 @@
 // Club Beluga SW — cachea el shell y sirve offline tras la 1ª visita.
-const CACHE = 'beluga-v9';
+const CACHE = 'beluga-v10';
 const CORE = ['./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).catch(()=>{})); });
 self.addEventListener('activate', e => { e.waitUntil((async () => {
